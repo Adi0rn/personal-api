@@ -6,6 +6,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest.mock import patch
 from contextlib import contextmanager
 from pathlib import Path
 from urllib.error import HTTPError
@@ -19,6 +20,8 @@ import tasks
 
 @contextmanager
 def test_server():
+    disable_tracker = patch.dict("os.environ", {"PAPI_DISABLE_SCREEN_TIME": "1"})
+    disable_tracker.start()
     listener = socket.socket()
     listener.bind(("127.0.0.1", 0))
     port = listener.getsockname()[1]
@@ -36,6 +39,7 @@ def test_server():
         server.should_exit = True
         thread.join(timeout=10)
         listener.close()
+        disable_tracker.stop()
         if thread.is_alive():
             raise RuntimeError("Test server failed to stop")
 

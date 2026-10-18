@@ -209,3 +209,17 @@ Verification:
 ```
 
 Account operations are mocked in these checks; passing tests does not imply live accounts have been authorized. Setup credentials and user consent are still required.
+
+## Screen time
+
+The dashboard's Screen time card and GET /stats/screen-time show aggregate active computer use in the Windows session running PAPI. Tracking begins when the updated server starts; earlier usage cannot be reconstructed. The server must remain running (one worker). The dashboard can be closed.
+
+The tracker samples Windows input-idle and desktop-lock state every 15 seconds. After 5 minutes without input it stops counting. Locked intervals and long sample gaps such as sleep, shutdown, or server downtime are excluded conservatively. This is an approximate active-use metric, not Windows' historical screen-on total; passive video/music may become idle after five minutes.
+
+Only daily active seconds and tracking metadata are saved to ignored data/screentime.db. No keystrokes, app names, window titles, screenshots, websites, or activity contents are collected. Totals survive restarts and are split at local midnight using the profile timezone chosen on first tracking start. The API also returns seven daily totals and the tracking start time. PAPI_DISABLE_SCREEN_TIME=1 disables the background sampler; automated server fixtures use it so tests never add to personal totals.
+
+Run screen-time checks with:
+
+```powershell
+& '.\.venv\Scripts\python.exe' -B -m unittest -v test_screen_time
+```
