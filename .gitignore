@@ -14,3 +14,5 @@ data/*.db
 data/*.db-*
 data/spotify_tokens.bin
 data/.spotify-*.tmp
+
+data/connections/

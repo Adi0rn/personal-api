@@ -169,3 +169,43 @@ Run dashboard and API checks:
 ```powershell
 & '.\.venv\Scripts\python.exe' -B -m unittest -v test_tasks test_features test_spotify test_spotify_player test_dashboard
 ```
+
+## Calendar, Gmail, and GitHub connections
+
+Open http://127.0.0.1:8000/connections/setup for exact registration steps and local credential forms. The dashboard's Connections tab displays upcoming primary-calendar events, unread inbox subjects/senders, and recently updated repositories. These integrations are read-only.
+
+Google uses one web OAuth client for Calendar and Gmail. Enable Google Calendar API and Gmail API, configure the consent screen and your test user, add the requested read-only scopes, and register this callback exactly:
+
+```text
+http://127.0.0.1:8000/connections/google/callback
+```
+
+Enter the client ID and client secret only on PAPI's local setup page, then authorize Google. Requested scopes: calendar.events.readonly and gmail.readonly. Google may impose verification, organization, or testing restrictions; provider authorization must be completed by the user. Expired or revoked refresh tokens require reconnecting.
+
+GitHub uses a fine-grained personal access token. Choose only the repositories you intend to share, leave optional permissions unset, and keep Metadata read-only. Paste it only into the local setup page. The initial features read repository metadata and public event activity; they do not need code write, mail, calendar write, or message-send permissions. Token expiration and provider policy still apply.
+
+Credentials and grants are encrypted with Windows DPAPI under the ignored data/connections directory. No credential values are returned by status endpoints. The app exposes no message bodies or attachments, does not mark mail read, and makes no email/calendar/repository modifications. Disconnecting forgets local tokens; revoke authorization at the provider to revoke remote grants. Keep the server on loopback; it remains a single-user local application.
+
+Routes:
+
+- GET /connections/status
+- GET /connections/setup
+- POST /connections/google/config (client_id and client_secret)
+- GET /connect/google (browser authorization)
+- POST /connections/github/config (fine-grained token)
+- DELETE /connections/google or /connections/github
+- GET /calendar/events?days=7&limit=10 (primary calendar, upcoming interval)
+- GET /gmail/messages?unread=true&limit=5 (inbox subjects, senders, dates, and unread flags)
+- GET /github/profile
+- GET /github/repos?limit=10
+- GET /github/activity?limit=10 (public activity)
+
+Voice and dashboard commands: show my calendar; show unread emails; show my emails; show my repositories; show my github activity. Restart an already-open voice overlay to load new supported phrases. Mail commands read subject/sender summaries, not full message bodies. Calendar commands show upcoming events over seven days rather than a local-calendar-day agenda.
+
+Verification:
+
+```powershell
+& '.\.venv\Scripts\python.exe' -B -m unittest -v test_tasks test_features test_spotify test_spotify_player test_dashboard test_connections
+```
+
+Account operations are mocked in these checks; passing tests does not imply live accounts have been authorized. Setup credentials and user consent are still required.

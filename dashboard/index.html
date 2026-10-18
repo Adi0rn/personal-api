@@ -4,8 +4,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="dark"><title>PAPI · Your day, connected</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%233a2552'/%3E%3Cpath d='M12 29V11h9a6 6 0 0 1 0 12h-9m0-6h9' fill='none' stroke='%23ddc5f3' stroke-width='3'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="/dashboard/assets/style.css?v=project-title-action-1"><script src="/dashboard/assets/app.js?v=empty-task-clean-1" defer></script>
-</head>
+<link rel="stylesheet" href="/dashboard/assets/style.css?v=connections-1"><script src="/dashboard/assets/app.js?v=connections-1" defer></script>
+<script src="/dashboard/assets/connections.js?v=1" defer></script></head>
 <body>
 <svg class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
 <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
@@ -27,7 +27,7 @@
 <button class="nav-item" data-view="tasks"><svg><use href="#i-check"/></svg>My tasks<span class="nav-count" id="nav-task-count">—</span></button>
 <button class="nav-item" data-view="projects"><svg><use href="#i-folder"/></svg>Projects</button>
 <button class="nav-item" data-view="music"><svg><use href="#i-music"/></svg>Music</button>
-</nav>
+<button class="nav-item" data-view="connections"><svg><use href="#i-grid"/></svg>Connections</button></nav>
 <div class="sidebar-bottom"><div class="connection-dot"><i></i><span id="server-state">Connecting…</span></div><div class="user-card"><span id="avatar">A</span><div><strong id="sidebar-name">Your workspace</strong><small>Personal space</small></div></div></div>
 </aside>
 <main>
@@ -48,6 +48,11 @@
 <a class="connect-link" href="/connect/spotify" id="spotify-connect">Connect or update permissions <span>↗</span></a><p id="music-error" class="inline-error" role="status"></p>
 <div class="playlist-controls"><label for="device-select">LISTENING ON</label><select id="device-select"><option value="">Active Spotify device</option></select><label for="playlist-select">PICK A PLAYLIST</label><div class="playlist-row"><select id="playlist-select"><option value="">Choose your playlist</option></select><button id="play-playlist" class="icon-button" aria-label="Play selected playlist"><svg><use href="#i-arrow"/></svg></button></div><button id="more-playlists" class="text-button" hidden>Load more playlists</button></div></section>
 <section class="panel projects-panel" data-panel="projects"><div class="panel-heading"><div><h2>Things you're building</h2></div><span class="subtle" id="project-count">Your projects</span></div><p class="inline-error" id="project-error" role="status"></p><div id="project-grid" class="project-grid"><p class="empty">Loading your projects…</p></div></section>
+<section class="panel connections-panel" data-panel="connections"><div class="panel-heading"><h2>Connections</h2><a class="text-button" href="/connections/setup">Setup ↗</a></div><div class="connections-grid">
+<article class="connection-card"><div class="connection-heading"><h3>Calendar</h3><span id="calendar-status" class="status-pill">Loading</span></div><div id="calendar-data" class="connection-data"></div><a href="/connections/setup" class="connect-link">Google setup ↗</a></article>
+<article class="connection-card"><div class="connection-heading"><h3>Gmail</h3><span id="gmail-status" class="status-pill">Loading</span></div><div id="gmail-data" class="connection-data"></div><a href="https://mail.google.com/" target="_blank" rel="noopener noreferrer" class="connect-link">Open Gmail ↗</a></article>
+<article class="connection-card"><div class="connection-heading"><h3>GitHub</h3><span id="github-status" class="status-pill">Loading</span></div><div id="github-data" class="connection-data"></div><a href="/connections/setup" class="connect-link">GitHub setup ↗</a></article>
+</div></section>
 </div>
 <footer><a href="/docs" target="_blank" rel="noopener">Explore the API ↗</a></footer>
 </div>

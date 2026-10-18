@@ -11,6 +11,10 @@ class PersonalAPIError(Exception):
 
 
 EXACT = {
+    "show my calendar", "show calendar", "what's on my calendar", "what is on my calendar", "show upcoming events",
+    "show my emails", "show my gmail", "show unread emails", "read my unread emails", "read my emails",
+    "show my repositories", "show my github repos", "list my repositories", "show my github repositories",
+    "show github activity", "show my github activity",
     "show my tasks", "list my tasks", "what are my tasks", "what do i need to do",
     "show high priority tasks", "what are my high priority tasks",
     "show my projects", "list my projects", "what are my projects",
