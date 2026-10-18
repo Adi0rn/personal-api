@@ -1,0 +1,16 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+.pytest_cache/
+.ruff_cache/
+*.log
+data/profile.json
+backups/
+data/*.db
+data/*.db-*
+data/spotify_tokens.bin
+data/.spotify-*.tmp
