@@ -86,3 +86,47 @@ Tests use temporary databases and folders, preserving your saved data.
 Personal profiles, SQLite databases, `.env` files, credentials, logs, backups, and virtual environments are excluded from Git. Templates contain no account credentials or personal records.
 
 This API is intended for one user on their own computer. It does not implement API authentication. Keep it bound to `127.0.0.1` rather than exposing it to a network or public host.
+
+## Spotify connection and playback
+
+The Spotify integration uses Authorization Code with PKCE, with automatic token refresh. It needs a **Client ID**, not a Client Secret.
+
+1. Create or select an app at [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
+2. Add `http://127.0.0.1:8000/spotify/callback` as a redirect URI, keeping any other callbacks your app uses.
+3. On first setup, copy `.env.example` to `.env`, then set `SPOTIFY_CLIENT_ID` to your app's Client ID. Preserve an existing `.env`. Changes are read without a restart.
+4. Open [Connect Spotify](http://127.0.0.1:8000/connect/spotify) directly in your browser and approve access. Do not use the docs Execute button for sign-in.
+5. Check [connection status](http://127.0.0.1:8000/spotify/status). `connected` means credentials are saved; `playback_ready` means all requested playback permissions are present. Neither guarantees an active device or Premium eligibility.
+
+Spotify development-mode eligibility, allowed-user limits, and Premium requirements are governed by [Spotify's current rules](https://developer.spotify.com/documentation/web-api/concepts/quota-modes). Play/pause requires [Spotify Premium](https://developer.spotify.com/documentation/web-api/reference/start-a-users-playback).
+
+| Route | Purpose |
+| --- | --- |
+| `GET /connect/spotify` | Browser sign-in |
+| `GET /spotify/status` | Connection and playback permission status |
+| `GET /spotify/profile` | Account identity |
+| `GET /spotify/playlists` | Paginated playlists (`limit`, `offset`, and `next_offset`) |
+| `GET /spotify/currently-playing` | Current track or episode and progress |
+| `GET /spotify/devices` | Available devices, activity, and restrictions |
+| `POST /spotify/play` | Resume or play a selected playlist |
+| `POST /spotify/pause` | Pause |
+| `DELETE /spotify/connection` | Forget credentials locally |
+
+Use the docs to send POST requests. An empty body or `{}` resumes or pauses on the active device. To play a playlist:
+
+```json
+{"playlist": "https://open.spotify.com/playlist/YOUR_PLAYLIST_ID"}
+```
+
+A 22-character playlist ID or `spotify:playlist:ID` also works. Include `device_id` to target a controllable device from `/spotify/devices`; otherwise Spotify uses the active device. Open Spotify and start a song if no active device is available. Commands return `status: requested`; check currently playing to verify the outcome. The API controls an existing Spotify client; it does not stream audio.
+
+Requested scopes: `user-read-private`, `playlist-read-private`, `user-read-currently-playing`, `user-read-playback-state`, and `user-modify-playback-state`. Reconnect if playback permissions are missing.
+
+Tokens are encrypted with Windows DPAPI for the Windows user running the server and saved in the ignored `data/spotify_tokens.bin` file. Moving the credentials to another Windows account or computer may require reconnecting. Disconnecting removes local credentials; revoke the grant in Spotify account settings to remove access at Spotify.
+
+Run all checks:
+
+```powershell
+& '.\.venv\Scripts\python.exe' -B -m unittest -v test_tasks test_features test_spotify test_spotify_player
+```
+
+Spotify tests use fake credentials, simulated responses, and temporary storage. Playback checks never change real devices. Regression coverage includes successful plain-text Spotify command acknowledgements.

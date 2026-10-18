@@ -7,6 +7,8 @@ from fastapi import FastAPI, HTTPException
 
 from tasks import init_db, router as tasks_router
 from projects import router as projects_router
+from spotify_connection import router as spotify_router
+from spotify_player import router as spotify_player_router
 
 BASE_DIR = Path(__file__).resolve().parent
 PROFILE_FILE = BASE_DIR / "data" / "profile.json"
@@ -17,9 +19,11 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Personal API", version="0.4.0", lifespan=lifespan)
+app = FastAPI(title="Personal API", version="0.6.0", lifespan=lifespan)
 app.include_router(tasks_router)
 app.include_router(projects_router)
+app.include_router(spotify_router)
+app.include_router(spotify_player_router)
 
 
 @app.get("/")
