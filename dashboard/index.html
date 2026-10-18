@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark"><title>PAPI · Your day, connected</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='12' fill='%233a2552'/%3E%3Cpath d='M12 29V11h9a6 6 0 0 1 0 12h-9m0-6h9' fill='none' stroke='%23ddc5f3' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/dashboard/assets/style.css?v=project-title-action-1"><script src="/dashboard/assets/app.js?v=empty-task-clean-1" defer></script>
+</head>
+<body>
+<svg class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+<symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9H3Z"/></symbol>
+<symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13M9 9l11-2"/><ellipse cx="6" cy="18" rx="3" ry="3"/><ellipse cx="17" cy="16" rx="3" ry="3"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+<symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="m8 5 11 7-11 7Z"/></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M6 6a8 8 0 0 1 13 2M5 16a8 8 0 0 0 13 2"/></symbol>
+</defs></svg>
+<aside class="sidebar">
+<a class="brand" href="/dashboard" aria-label="PAPI home"><span class="brand-mark">p<span>·</span></span><span>PAPI</span></a>
+<div class="nav-label">WORKSPACE</div>
+<nav aria-label="Main navigation">
+<button class="nav-item active" data-view="overview"><svg><use href="#i-grid"/></svg>Overview</button>
+<button class="nav-item" data-view="tasks"><svg><use href="#i-check"/></svg>My tasks<span class="nav-count" id="nav-task-count">—</span></button>
+<button class="nav-item" data-view="projects"><svg><use href="#i-folder"/></svg>Projects</button>
+<button class="nav-item" data-view="music"><svg><use href="#i-music"/></svg>Music</button>
+</nav>
+<div class="sidebar-bottom"><div class="connection-dot"><i></i><span id="server-state">Connecting…</span></div><div class="user-card"><span id="avatar">A</span><div><strong id="sidebar-name">Your workspace</strong><small>Personal space</small></div></div></div>
+</aside>
+<main>
+<header class="topbar"><div class="breadcrumb">Your workspace <span>/</span> <strong id="view-label">Overview</strong></div><div class="top-actions"><span class="date-label" id="today-date"></span><button class="icon-button" id="refresh" aria-label="Refresh dashboard"><svg><use href="#i-refresh"/></svg></button></div></header>
+<div class="page">
+<section class="greeting"><div><h1 id="greeting">Your day, connected.</h1></div><div class="live-badge"><i></i>Live workspace</div></section>
+<section class="command-card" aria-labelledby="command-heading"><div class="command-icon"><svg><use href="#i-mic"/></svg></div><div class="command-main"><h2 id="command-heading">Say it. Or type it.</h2><p>Use your voice assistant, or try a command right here.</p><form id="command-form"><label class="sr-only" for="command-input">PAPI assistant command</label><input id="command-input" placeholder="Try “show my tasks” or “pause my music”" autocomplete="off" maxlength="1000" required><button class="send-button" aria-label="Send command"><svg><use href="#i-arrow"/></svg></button></form><div id="command-reply" role="status" aria-live="polite"></div></div><span class="keyboard-hint">/ to focus</span></section>
+<section class="stats" aria-label="Workspace summary"><div class="stat"><span class="stat-icon green"><svg><use href="#i-check"/></svg></span><div><span class="stat-label">Open tasks</span><strong id="stat-tasks">—</strong><small id="stat-due">Your next steps, in view</small></div></div><div class="stat"><span class="stat-icon beige"><svg><use href="#i-folder"/></svg></span><div><span class="stat-label">Projects</span><strong id="stat-projects">—</strong><small id="stat-active">A place for every idea</small></div></div><div class="stat"><span class="stat-icon lavender"><svg><use href="#i-music"/></svg></span><div><span class="stat-label">Spotify</span><strong class="word-stat" id="stat-spotify">Connecting</strong><small id="stat-spotify-detail">Checking your connection</small></div></div></section>
+<div class="workspace-grid">
+<section class="panel task-panel" data-panel="tasks"><div class="panel-heading"><div><h2>Your next moves<span id="task-total" class="count-pill">0</span></h2></div><button class="text-button" id="focus-new-task"><svg><use href="#i-plus"/></svg>Add task</button></div>
+<div class="task-toolbar"><div class="tabs" role="group" aria-label="Task status"><button class="selected" data-filter="open">To do</button><button data-filter="done">Done</button><button data-filter="all">All</button></div><label class="sr-only" for="task-priority-filter">Filter priority</label><select id="task-priority-filter"><option value="">All priorities</option><option value="high">High priority</option><option value="medium">Medium priority</option><option value="low">Low priority</option></select></div>
+<p class="inline-error" id="task-error" role="status"></p><div id="task-list" class="task-list"><p class="empty">Loading your tasks…</p></div>
+<form id="task-form" class="task-create"><label class="sr-only" for="task-title">New task title</label><input id="task-title" placeholder="What would you like to get done?" maxlength="200" required><div class="task-create-details"><label>Due date<input id="task-date" type="date"></label><label>Priority<select id="task-priority"><option value="medium">Medium</option><option value="high">High</option><option value="low">Low</option></select></label><button class="button dark"><svg><use href="#i-plus"/></svg>Add task</button></div></form></section>
+<section class="panel music-panel" data-panel="music"><div class="panel-heading"><div><h2>A soundtrack for today</h2></div><svg class="heading-icon"><use href="#i-music"/></svg></div>
+<div class="record-scene" aria-hidden="true"><div class="record-halo"></div><div class="record"><div class="record-label"><span>PAPI</span><i></i><small>IN YOUR OWN RHYTHM</small></div></div></div>
+<div class="now-playing"><span class="eyebrow" id="playback-label">YOUR SPOTIFY</span><h3 id="track-title">Make yourself at home.</h3><p id="track-artist">Your music will appear here.</p></div><div class="progress-track" role="progressbar" aria-label="Track progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="track-progress"></span></div><div class="progress-times"><span id="track-time">0:00</span><span id="track-duration">0:00</span></div>
+<div class="player-controls"><button id="resume" class="player-button" aria-label="Resume Spotify"><svg><use href="#i-play"/></svg></button><button id="pause" class="player-button secondary" aria-label="Pause Spotify"><svg><use href="#i-pause"/></svg></button><span id="player-status">Checking Spotify…</span></div>
+<a class="connect-link" href="/connect/spotify" id="spotify-connect">Connect or update permissions <span>↗</span></a><p id="music-error" class="inline-error" role="status"></p>
+<div class="playlist-controls"><label for="device-select">LISTENING ON</label><select id="device-select"><option value="">Active Spotify device</option></select><label for="playlist-select">PICK A PLAYLIST</label><div class="playlist-row"><select id="playlist-select"><option value="">Choose your playlist</option></select><button id="play-playlist" class="icon-button" aria-label="Play selected playlist"><svg><use href="#i-arrow"/></svg></button></div><button id="more-playlists" class="text-button" hidden>Load more playlists</button></div></section>
+<section class="panel projects-panel" data-panel="projects"><div class="panel-heading"><div><h2>Things you're building</h2></div><span class="subtle" id="project-count">Your projects</span></div><p class="inline-error" id="project-error" role="status"></p><div id="project-grid" class="project-grid"><p class="empty">Loading your projects…</p></div></section>
+</div>
+<footer><a href="/docs" target="_blank" rel="noopener">Explore the API ↗</a></footer>
+</div>
+</main>
+<dialog id="task-dialog"><form id="task-edit-form"><div class="dialog-heading"><h2>Edit task</h2><button type="button" class="close-dialog" aria-label="Close task editor">×</button></div><label>Task<input id="edit-task-title" maxlength="200" required></label><label>Due date<input id="edit-task-date" type="date"></label><label>Priority<select id="edit-task-priority"><option>low</option><option>medium</option><option>high</option></select></label><p class="dialog-error inline-error" role="status"></p><button class="button dark">Save changes</button></form></dialog>
+<dialog id="project-dialog"><form id="project-edit-form"><div class="dialog-heading"><h2 id="edit-project-heading">Edit project</h2><button type="button" class="close-dialog" aria-label="Close project editor">×</button></div><label>Description<textarea id="edit-project-description" rows="3" maxlength="2000"></textarea></label><label>Status<select id="edit-project-status"><option value="unspecified">Not set</option><option value="planned">Planned</option><option value="active">Active</option><option value="paused">Paused</option><option value="completed">Completed</option></select></label><label>Next steps <small>One per line, up to 30</small><textarea id="edit-project-steps" rows="5"></textarea></label><p class="dialog-error inline-error" role="status"></p><button class="button dark">Save project</button></form></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+</body></html>

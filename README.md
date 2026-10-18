@@ -130,3 +130,42 @@ Run all checks:
 ```
 
 Spotify tests use fake credentials, simulated responses, and temporary storage. Playback checks never change real devices. Regression coverage includes successful plain-text Spotify command acknowledgements.
+
+## Dashboard
+
+Open http://127.0.0.1:8000/dashboard while the API is running. The dashboard uses the same profile, tasks, project details, and Spotify connection as the API.
+
+- Create tasks, set due dates and priorities, edit them, and complete or reopen them.
+- Edit project descriptions, status, and next steps.
+- Read Spotify playback, choose a device or playlist, and send play/pause commands.
+- Type supported assistant commands into the command bar. Press / to focus it.
+
+The sidebar switches between Overview, My tasks, Projects, and Music. Data refreshes while the page is visible; errors in one service do not prevent the other sections from loading. Music controls send requests only when explicitly clicked or commanded.
+
+## Voice assistant integration
+
+The distributable adapter and installation instructions are in [integrations/voice-assistant](integrations/voice-assistant/README.md).
+
+The companion voice-assistant project uses a loopback-only HTTP adapter (`personal_api_client.py`) in its existing `PersonalCommands` handler, shared by its overlay and terminal. Restart an already-open overlay once after updating it. Existing microphone, transcription, voice, hotkey, notes, shortcuts, and Gemini settings are preserved.
+
+Supported examples:
+
+- Show my tasks / Show high priority tasks
+- Add task Buy milk
+- Complete task 3
+- Show my projects
+- Project details for Personal API / Next steps for Personal API
+- What song is playing?
+- Pause my music / Resume my music
+- Play playlist Heart and soul (exact playlist name, ID, URI, or link)
+- Open dashboard (opens the page from the voice assistant)
+
+The shared API route is `POST /assistant/command` with `{"text":"show my tasks"}`. Only recognized explicit commands execute actions. Unknown commands return handled=false. In the companion assistant, unrelated questions continue to Gemini; failures in recognized API commands are reported and do not fall back to the model. Due dates and priorities can be edited in the dashboard; the basic voice add-task command treats its remaining text as the task title.
+
+The companion assistant defaults to `PERSONAL_API_URL=http://127.0.0.1:8000`; it does not need Spotify credentials. The API must be running. It shares data through the API, not by opening its database files. The companion's existing ElevenLabs speech services still process voice input and spoken replies; no cloud LLM is used to execute these commands.
+
+Run dashboard and API checks:
+
+```powershell
+& '.\.venv\Scripts\python.exe' -B -m unittest -v test_tasks test_features test_spotify test_spotify_player test_dashboard
+```
