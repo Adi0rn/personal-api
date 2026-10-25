@@ -10,6 +10,8 @@ import projects
 import tasks
 import spotify_connection as spotify
 import spotify_player as player
+import spotify_songs
+import dashboard_player
 import connections
 import briefing
 
@@ -19,6 +21,7 @@ router = APIRouter(prefix="/assistant", tags=["Assistant"], dependencies=[Depend
 class Command(BaseModel):
     model_config = ConfigDict(extra="forbid")
     text: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=1000)]
+    device_id: player.DeviceId | None = None
 
 
 def result(reply, action="read"):
@@ -52,9 +55,12 @@ def find_playlist(name):
     return player.PlayRequest(playlist=matches[0]["id"])
 
 
-def handle_command(text):
+def handle_command(text, device_id=None):
     original = re.sub(r"\s+", " ", text).strip()
     normalized = original.casefold().rstrip(".!?").replace("’", "'")
+    song_reply = spotify_songs.command(original, device_id=device_id)
+    if song_reply is not None:
+        return song_reply
     if normalized in {"give me my daily briefing", "daily briefing", "show my briefing", "show my daily briefing", "give me my briefing", "what's my day looking like", "what is my day looking like"}:
         return result(briefing.build_briefing()["summary"])
     if normalized in {"show my calendar", "show calendar", "what's on my calendar", "what is on my calendar", "show upcoming events"}:
@@ -120,12 +126,15 @@ def handle_command(text):
         player.pause()
         return result("Sent the pause command to Spotify.", "music_paused")
     if normalized in {"resume music", "resume my music", "resume spotify", "play music", "play my music"}:
-        player.play()
+        player.play(player.PlayRequest(device_id=device_id)) if device_id else player.play()
         return result("Sent the resume command to Spotify.", "music_resumed")
     match = re.fullmatch(r"play(?: my)? playlist\s+(.+)", original, re.IGNORECASE)
     if match:
         name = match.group(1).strip()
-        player.play(find_playlist(name))
+        target = find_playlist(name)
+        if device_id:
+            target.device_id = device_id
+        player.play(target)
         return result("Sent the playlist playback command to Spotify.", "playlist_requested")
     return {"handled": False, "reply": "That command is not supported yet. Try show my tasks, pause my music, or help.", "action": None}
 
@@ -134,6 +143,15 @@ def handle_command(text):
 def command(body: Command):
     """Execute only recognized explicit commands; no model or shell executes actions."""
     try:
-        return handle_command(body.text)
+        dashboard = dashboard_player.status()
+        target = body.device_id or (dashboard["device_id"] if dashboard["ready"] else None)
+        reply = handle_command(body.text, device_id=target)
+        if (reply.get("action") in {"song_requested", "playlist_requested", "music_resumed"}
+                and dashboard["ready"] and target == dashboard["device_id"]):
+            # Finish the same transfer as Play here, automatically, after the
+            # requested track/context is selected. Never repeat the song command.
+            player.transfer(player.TransferRequest(device_id=target, play=True))
+            reply["dashboard_playback"] = True
+        return reply
     except ValidationError:
         raise HTTPException(422, "Check the command details. Task titles must be between 1 and 200 characters.") from None

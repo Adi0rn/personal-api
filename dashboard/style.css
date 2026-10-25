@@ -46,3 +46,9 @@ dialog input,dialog select,dialog textarea{background:#0c0813;border-color:#422d
 .briefing-panel{grid-column:1/-1}.briefing-panel>.panel-heading h2{margin:0}.briefing-panel>small{color:#b29cc4;font-size:11px}.briefing-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-top:16px}.briefing-section{min-width:0;border-top:1px solid #30213d;padding-top:12px}.briefing-section h3{font-size:13px;color:#ddc5f3;margin:0 0 12px}.briefing-item{font-size:12px;line-height:1.7;overflow-wrap:anywhere;margin:8px 0;color:#c6b8d2}@media(max-width:1100px){.briefing-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.briefing-grid{grid-template-columns:1fr}}
 
 @media(min-width:1101px){.music-panel{grid-row:2 / span 2}}
+
+.browser-player{border:1px solid #352445;border-radius:12px;padding:14px;margin:15px 0}.browser-actions{display:flex;flex-wrap:wrap;gap:12px}.browser-player p{font-size:12px;line-height:1.7;color:#bca5d0;margin:10px 0 0}.browser-player a{display:inline-block;margin-top:10px}
+
+.player-controls{flex-wrap:wrap}.player-controls #player-status{flex:1;min-width:100px}
+
+

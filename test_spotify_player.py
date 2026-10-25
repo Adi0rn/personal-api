@@ -93,3 +93,37 @@ class PlaybackTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+    def test_next_previous_targeting_acknowledgements_and_denied_origin(self):
+        self.seed_tokens()
+        for path in ("next", "previous"):
+            self.assertEqual(self.client.post("/spotify/" + path, json={"device_id": " "}).status_code, 422)
+            self.assertEqual(self.client.post("/spotify/" + path, headers={"Origin":"https://evil.example"}).status_code, 403)
+        self.remote.assert_not_called()
+        self.remote.side_effect = None
+        for path in ("next", "previous"):
+            for code in (200, 202, 204):
+                self.remote.return_value = httpx.Response(code, text="ack")
+                response = self.client.post("/spotify/" + path, json={"device_id":"browser-device"})
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(self.remote.call_args.args, ("POST", "https://api.spotify.com/v1/me/player/" + path))
+                self.assertEqual(self.remote.call_args.kwargs["params"], {"device_id":"browser-device"})
+            self.remote.return_value = httpx.Response(204)
+            self.assertEqual(self.client.post("/spotify/" + path).status_code, 200)
+            self.assertEqual(self.remote.call_args.kwargs["params"], {})
+
+    def test_skip_requires_playback_scope_and_reports_missing_device(self):
+        tokens = self.seed_tokens()
+        tokens["scope"] = "user-read-private"
+        spotify_store.save_tokens(tokens)
+        self.assertEqual(self.client.post("/spotify/next").status_code, 403)
+        self.remote.assert_not_called()
+        self.seed_tokens()
+        self.remote.side_effect = None
+        self.remote.return_value = httpx.Response(404)
+        self.assertEqual(self.client.post("/spotify/previous").status_code, 409)
+        html = self.client.get("/dashboard").text
+        for control in ("play-pause", "previous-track", "next-track"):
+            self.assertIn('id="' + control + '"', html)
+        self.assertNotIn('id="resume"', html)
+        self.assertNotIn('id="pause"', html)

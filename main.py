@@ -14,6 +14,8 @@ from tasks import init_db, router as tasks_router
 from projects import router as projects_router
 from spotify_connection import router as spotify_router
 from spotify_player import router as spotify_player_router
+from spotify_songs import router as spotify_songs_router
+from dashboard_player import router as dashboard_player_router
 from assistant_bridge import router as assistant_router
 from connections import router as connections_router
 
@@ -38,6 +40,8 @@ app.include_router(tasks_router)
 app.include_router(projects_router)
 app.include_router(spotify_router)
 app.include_router(spotify_player_router)
+app.include_router(spotify_songs_router)
+app.include_router(dashboard_player_router)
 app.include_router(assistant_router)
 app.include_router(connections_router)
 app.include_router(screen_time.router)
