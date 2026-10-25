@@ -52,3 +52,5 @@ dialog input,dialog select,dialog textarea{background:#0c0813;border-color:#422d
 .player-controls{flex-wrap:wrap}.player-controls #player-status{flex:1;min-width:100px}
 
 
+
+.youtube-watch-later{grid-column:1/-1}.youtube-watch-later p{font-size:12px;line-height:1.7;color:#c6b8d2}.youtube-watch-later small{display:block;margin-top:12px;color:#b29cc4;font-size:11px;line-height:1.7}

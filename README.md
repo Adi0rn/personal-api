@@ -352,3 +352,11 @@ https://support.mozilla.org/en-US/kb/block-autoplay
 Restart an already-open voice assistant and refresh the dashboard after updating.
 
 Music commands now default to the registered live dashboard device when no device_id is supplied. After a successful song, playlist, or resume request, the API automatically transfers to that dashboard with play=true (the Play here action). Pause and read-only commands never trigger this transfer, and explicitly selected other devices remain respected. A stale autoplay-block report no longer prevents one explicit voice request; new browser blocks are still reported. Live resume verified Spotify playing on the registered dashboard without a Play here click.
+
+## YouTube Watch Later
+
+The dashboard overview and Connections panel include an Open Watch Later shortcut.
+It opens `https://www.youtube.com/playlist?list=WL` in a new tab using your browser's
+YouTube sign-in. PAPI does not read, import, sync, or store its videos or credentials.
+The built-in Watch Later list cannot be retrieved through the official YouTube API.
+See [YouTube's playlist restriction](https://developers.google.com/youtube/v3/docs/playlists/list).
