@@ -223,3 +223,15 @@ Run screen-time checks with:
 ```powershell
 & '.\.venv\Scripts\python.exe' -B -m unittest -v test_screen_time
 ```
+
+## Windows launcher and sign-in startup
+
+Run `start-papi.ps1` from the cloned project to start the local server and open the
+dashboard. Use `-NoBrowser` to start only the server. The launcher reuses a healthy
+server and keeps Uvicorn bound to loopback. Its logs remain ignored by Git.
+
+For automatic startup at Windows sign-in, place a shortcut in your user's Startup
+folder targeting Windows PowerShell with `-NoProfile -WindowStyle Hidden -File`
+followed by the quoted absolute path to `start-papi.ps1`, then `-NoBrowser`.
+Startup and desktop shortcuts belong to your Windows account and are not bundled
+in the repository. The Python virtual environment must already be installed.
