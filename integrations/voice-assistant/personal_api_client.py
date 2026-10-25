@@ -11,6 +11,7 @@ class PersonalAPIError(Exception):
 
 
 EXACT = {
+    "give me my daily briefing", "daily briefing", "show my briefing", "show my daily briefing", "give me my briefing", "what's my day looking like", "what is my day looking like",
     "show my calendar", "show calendar", "what's on my calendar", "what is on my calendar", "show upcoming events",
     "show my emails", "show my gmail", "show unread emails", "read my unread emails", "read my emails",
     "show my repositories", "show my github repos", "list my repositories", "show my github repositories",
@@ -57,7 +58,7 @@ def handle_api_command(text):
     try:
         with requests.Session() as session:
             session.trust_env = False
-            response = session.post(base + "/assistant/command", json={"text": original}, timeout=(2, 40), allow_redirects=False)
+            response = session.post(base + "/assistant/command", json={"text": original}, timeout=(2, 75) if normalized in {"give me my daily briefing", "daily briefing", "show my briefing", "show my daily briefing", "give me my briefing", "what's my day looking like", "what is my day looking like"} else (2, 40), allow_redirects=False)
     except requests.RequestException:
         raise PersonalAPIError("Cannot reach your Personal API. Start its server, then try again.") from None
     try:

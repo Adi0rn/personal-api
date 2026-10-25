@@ -1,6 +1,7 @@
 import json
 import os
 import screen_time
+import briefing
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -40,6 +41,7 @@ app.include_router(spotify_player_router)
 app.include_router(assistant_router)
 app.include_router(connections_router)
 app.include_router(screen_time.router)
+app.include_router(briefing.router)
 
 
 @app.get("/")

@@ -11,6 +11,7 @@ import tasks
 import spotify_connection as spotify
 import spotify_player as player
 import connections
+import briefing
 
 router = APIRouter(prefix="/assistant", tags=["Assistant"], dependencies=[Depends(spotify.local_request)])
 
@@ -54,6 +55,8 @@ def find_playlist(name):
 def handle_command(text):
     original = re.sub(r"\s+", " ", text).strip()
     normalized = original.casefold().rstrip(".!?").replace("’", "'")
+    if normalized in {"give me my daily briefing", "daily briefing", "show my briefing", "show my daily briefing", "give me my briefing", "what's my day looking like", "what is my day looking like"}:
+        return result(briefing.build_briefing()["summary"])
     if normalized in {"show my calendar", "show calendar", "what's on my calendar", "what is on my calendar", "show upcoming events"}:
         events = connections.calendar_events(days=7, limit=5)["events"]
         if not events:
@@ -74,7 +77,7 @@ def handle_command(text):
         events = connections.github_activity(limit=5)["events"]
         return result("Recent public GitHub activity: " + ". ".join((item["type"] or "Activity") + " in " + (item["repository"] or "a repository") for item in events) + "." if events else "No recent public GitHub activity.")
     if normalized in {"help", "commands", "what can you do"}:
-        return result("Try: show my calendar; show unread emails; show my repositories; show my github activity; show my tasks; show high priority tasks; add task Buy milk; complete task 3; show my projects; project details for Personal API; what's playing; pause my music; resume my music; or play playlist followed by its exact name or link.")
+        return result("Try: give me my daily briefing; show my calendar; show unread emails; show my repositories; show my github activity; show my tasks; show high priority tasks; add task Buy milk; complete task 3; show my projects; project details for Personal API; what's playing; pause my music; resume my music; or play playlist followed by its exact name or link.")
     if normalized in {"show my tasks", "list my tasks", "what are my tasks", "what do i need to do", "show high priority tasks", "what are my high priority tasks"}:
         priority = "high" if "high priority" in normalized else None
         items = tasks.list_tasks(completed=False, priority=priority)

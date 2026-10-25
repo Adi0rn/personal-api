@@ -235,3 +235,29 @@ folder targeting Windows PowerShell with `-NoProfile -WindowStyle Hidden -File`
 followed by the quoted absolute path to `start-papi.ps1`, then `-NoBrowser`.
 Startup and desktop shortcuts belong to your Windows account and are not bundled
 in the repository. The Python virtual environment must already be installed.
+
+## Daily briefing
+
+`GET /briefing` combines open tasks (including overdue and due-today counts),
+remaining primary-calendar events until local midnight, the unread inbox message
+count, and up to five recent public GitHub events. GitHub activity is recent,
+not restricted to today. Calendar includes ongoing and all-day events; up to
+five are displayed, with an indicator when more are available.
+
+The profile timezone determines the date and midnight boundary, including daylight
+saving changes. Missing or invalid profile timezones use Asia/Kolkata and report
+`timezone_fallback: true`. Task previews show up to five per group; counts cover
+all unfinished tasks. Gmail reads only inbox label statistics for this feature.
+
+The overview dashboard loads the briefing and refreshes it every five minutes
+while visible. Its Refresh button updates it immediately. Say or type
+"Give me my daily briefing" or "What's my day looking like?". Restart an already
+running voice overlay to load the new phrases.
+
+Each section reports its own status. Unavailable or unauthorized services are
+identified instead of being reported as empty; other sections remain usable.
+Briefings use existing read-only connections, require no additional credentials,
+perform no actions, use no model, and are not saved to disk. The endpoint returns
+`Cache-Control: no-store`.
+
+Checks: `python -B -m unittest -v test_briefing` (temporary data and mocked accounts).
