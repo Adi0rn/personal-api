@@ -117,7 +117,7 @@ Use the docs to send POST requests. An empty body or `{}` resumes or pauses on t
 {"playlist": "https://open.spotify.com/playlist/YOUR_PLAYLIST_ID"}
 ```
 
-A 22-character playlist ID or `spotify:playlist:ID` also works. Include `device_id` to target a controllable device from `/spotify/devices`; otherwise Spotify uses the active device. Open Spotify and start a song if no active device is available. Commands return `status: requested`; check currently playing to verify the outcome. The Web API controls target a Spotify device. The optional browser player below can stream audio in the dashboard.
+A 22-character playlist ID or `spotify:playlist:ID` also works. Include `device_id` to target a controllable device from `/spotify/devices`; otherwise Spotify uses the active device. Open Spotify and start a song if no active device is available. Commands return `status: requested`; check currently playing to verify the outcome. The existing Web API controls target a Spotify device. The optional dashboard browser player described below can stream audio in the browser.
 
 Requested scopes: `user-read-private`, `playlist-read-private`, `user-read-currently-playing`, `user-read-playback-state`, and `user-modify-playback-state`. Reconnect if playback permissions are missing.
 
@@ -224,18 +224,6 @@ Run screen-time checks with:
 & '.\.venv\Scripts\python.exe' -B -m unittest -v test_screen_time
 ```
 
-## Windows launcher and sign-in startup
-
-Run `start-papi.ps1` from the cloned project to start the local server and open the
-dashboard. Use `-NoBrowser` to start only the server. The launcher reuses a healthy
-server and keeps Uvicorn bound to loopback. Its logs remain ignored by Git.
-
-For automatic startup at Windows sign-in, place a shortcut in your user's Startup
-folder targeting Windows PowerShell with `-NoProfile -WindowStyle Hidden -File`
-followed by the quoted absolute path to `start-papi.ps1`, then `-NoBrowser`.
-Startup and desktop shortcuts belong to your Windows account and are not bundled
-in the repository. The Python virtual environment must already be installed.
-
 ## Daily briefing
 
 `GET /briefing` combines open tasks (including overdue and due-today counts),
@@ -287,6 +275,8 @@ Reference: [Spotify Web Playback SDK](https://developer.spotify.com/documentatio
 Checks: `python -B -m unittest -v test_spotify_browser` (fake tokens, no real audio).
 
 The dashboard transport uses one play/pause button synchronized with playback, flanked by previous/next track buttons. POST /spotify/previous and POST /spotify/next accept an optional device_id, use the existing playback permission, and return a request acknowledgement. No additional authorization scopes are needed.
+
+
 ## Song search and playback (19 October 2026)
 
 - GET /spotify/search?title=Kiss%20of%20Life&artist=Sade returns playable track candidates.
@@ -308,6 +298,16 @@ and ten existing playback/dashboard tests passed with mocked Spotify responses.
 References:
 https://developer.spotify.com/documentation/web-api/reference/search
 https://developer.spotify.com/documentation/web-api/reference/start-a-users-playback
+
+## YouTube Watch Later
+
+The dashboard overview and Connections panel include an Open Watch Later shortcut.
+It opens `https://www.youtube.com/playlist?list=WL` in a new tab using your browser's
+YouTube sign-in. PAPI does not read, import, sync, or store its videos or credentials.
+The built-in Watch Later list cannot be retrieved through the official YouTube API.
+See [YouTube's playlist restriction](https://developers.google.com/youtube/v3/docs/playlists/list).
+
+
 ## Dashboard-first assistant music (19 October 2026)
 
 GET/POST/DELETE /spotify/dashboard-player track the current browser SDK device
@@ -332,6 +332,7 @@ passed. A live request selected PAPI · This browser and Spotify reported playba
 a browser autoplay restriction was also reported, so a real Play here click may
 still be necessary. Refresh older dashboard tabs to load the new client script.
 Reference: https://developer.spotify.com/documentation/web-playback-sdk/reference
+
 ## Hands-free dashboard music
 
 The assistant reuses the live browser player and transfers to its exact device
@@ -353,10 +354,49 @@ Restart an already-open voice assistant and refresh the dashboard after updating
 
 Music commands now default to the registered live dashboard device when no device_id is supplied. After a successful song, playlist, or resume request, the API automatically transfers to that dashboard with play=true (the Play here action). Pause and read-only commands never trigger this transfer, and explicitly selected other devices remain respected. A stale autoplay-block report no longer prevents one explicit voice request; new browser blocks are still reported. Live resume verified Spotify playing on the registered dashboard without a Play here click.
 
-## YouTube Watch Later
+## Task and meeting reminders
 
-The dashboard overview and Connections panel include an Open Watch Later shortcut.
-It opens `https://www.youtube.com/playlist?list=WL` in a new tab using your browser's
-YouTube sign-in. PAPI does not read, import, sync, or store its videos or credentials.
-The built-in Watch Later list cannot be retrieved through the official YouTube API.
-See [YouTube's playlist restriction](https://developers.google.com/youtube/v3/docs/playlists/list).
+Open the dashboard Reminders tab, or click **Remind** on an unfinished task. Pick a
+date and time (your computer's local time). General reminders can be created without
+linking a task. They are stored in the existing ignored data/tasks.db and survive
+restarts. Completing a task cancels its pending reminders. Dismiss/Cancel removes
+the alert from the list and prevents a later notification.
+
+Meeting alerts are enabled by default, 10 minutes before timed primary-calendar
+events. Change the lead time or disable them in Reminders. The read-only Google
+connection must work; reconnect Google if the panel asks. All-day and declined
+events are excluded. The scheduler refreshes the next 24 hours every minute,
+reconciles cancellations and time changes, and uses separate local/Calendar workers
+so network delays do not block task reminders. During an outage, already scheduled
+meeting reminders use the last successful calendar snapshot.
+
+PAPI must be running with one server worker in your signed-in Windows session;
+the dashboard can be closed. Local reminders work offline. Windows toasts are
+submitted through the installed Windows PowerShell notification identity, titled
+PAPI. Windows Do not disturb or notification preferences can hide banners. Use
+**Test notification** to submit a test. No browser notification permission is needed.
+
+The scheduler checks every 10 seconds, submits each alert at most once, and allows
+a 15-minute late window after a restart. Older reminders are marked Missed. An
+interrupted submission is marked Failed rather than risking a duplicate. Submitted
+means Windows accepted the toast, not confirmation that a person saw it. Failed or
+Missed alerts can be dismissed and recreated through Add reminder.
+
+Routes: GET/POST /reminders; DELETE /reminders/{id}; GET/PUT /reminders/settings;
+POST /reminders/test. PAPI_DISABLE_REMINDERS=1 disables the background workers;
+all automated server fixtures set this, and checks use temporary databases and
+mock notifications. No reminder history or personal calendar data is published.
+
+Validation: python -B -m unittest -v test_reminders.
+
+## Windows launcher and sign-in startup
+
+Run `start-papi.ps1` from the cloned project to start the local server and open the
+dashboard. Use `-NoBrowser` to start only the server. The launcher reuses a healthy
+server and keeps Uvicorn bound to loopback. Its logs remain ignored by Git.
+
+For automatic startup at Windows sign-in, place a shortcut in your user's Startup
+folder targeting Windows PowerShell with `-NoProfile -WindowStyle Hidden -File`
+followed by the quoted absolute path to `start-papi.ps1`, then `-NoBrowser`.
+Startup and desktop shortcuts belong to your Windows account and are not bundled
+in the repository. The Python virtual environment must already be installed.

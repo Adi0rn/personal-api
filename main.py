@@ -2,6 +2,7 @@ import json
 import os
 import screen_time
 import briefing
+import reminders
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -25,12 +26,18 @@ PROFILE_FILE = BASE_DIR / "data" / "profile.json"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    reminders.init_db()
+    enable_reminders = os.getenv("PAPI_DISABLE_REMINDERS") != "1"
+    if enable_reminders:
+        reminders.WORKER.start()
     track_screen_time = os.getenv("PAPI_DISABLE_SCREEN_TIME") != "1"
     if track_screen_time:
         screen_time.TRACKER.start()
     try:
         yield
     finally:
+        if enable_reminders:
+            reminders.WORKER.stop()
         if track_screen_time:
             screen_time.TRACKER.stop()
 
@@ -46,6 +53,7 @@ app.include_router(assistant_router)
 app.include_router(connections_router)
 app.include_router(screen_time.router)
 app.include_router(briefing.router)
+app.include_router(reminders.router)
 
 
 @app.get("/")

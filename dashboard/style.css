@@ -51,6 +51,6 @@ dialog input,dialog select,dialog textarea{background:#0c0813;border-color:#422d
 
 .player-controls{flex-wrap:wrap}.player-controls #player-status{flex:1;min-width:100px}
 
-
-
 .youtube-watch-later{grid-column:1/-1}.youtube-watch-later p{font-size:12px;line-height:1.7;color:#c6b8d2}.youtube-watch-later small{display:block;margin-top:12px;color:#b29cc4;font-size:11px;line-height:1.7}
+
+.reminders-panel{grid-column:1/-1}.reminders-panel>.panel-heading h2{margin:0}.reminder-settings{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:12px}.reminder-settings label{display:flex;align-items:center;gap:8px}.reminder-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid #30213d}.reminder-row strong{font-size:13px;overflow-wrap:anywhere}.reminder-row small{display:block;font-size:11px;margin-top:6px;color:#b29cc4;line-height:1.6}.reminders-panel>small{display:block;margin-top:16px;color:#b29cc4;font-size:11px}.reminder-row>div{min-width:0}

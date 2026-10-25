@@ -20,7 +20,7 @@ import tasks
 
 @contextmanager
 def test_server():
-    disable_tracker = patch.dict("os.environ", {"PAPI_DISABLE_SCREEN_TIME": "1"})
+    disable_tracker = patch.dict("os.environ", {"PAPI_DISABLE_SCREEN_TIME": "1", "PAPI_DISABLE_REMINDERS": "1"})
     disable_tracker.start()
     listener = socket.socket()
     listener.bind(("127.0.0.1", 0))
