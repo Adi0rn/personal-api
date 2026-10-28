@@ -250,33 +250,6 @@ perform no actions, use no model, and are not saved to disk. The endpoint return
 
 Checks: `python -B -m unittest -v test_briefing` (temporary data and mocked accounts).
 
-## Listen in the dashboard
-
-Reconnect Spotify once at `/connect/spotify` to grant `streaming`, `user-read-email`,
-and `user-read-private` in addition to existing playback permissions. In the Music
-panel, click **Enable browser player**. Once ready, choose a playlist and press play,
-or click **Play here** to transfer your current Spotify session into this browser.
-Enabling the player alone does not start audio or transfer playback. Other devices
-remain controllable through the existing device selector.
-
-Spotify Premium and a browser supporting protected content are required. Firefox
-or Chrome may work where an embedded browser does not. Keep the tab and PAPI server
-running; closing the tab disconnects this player. Browser refresh requires enabling
-it again. Disconnect browser stops this SDK session without removing account credentials.
-
-The official Spotify SDK is loaded only after Enable is clicked and streaming
-permissions are checked. It obtains a short-lived access token through same-origin
-`POST /spotify/browser-token` with `X-PAPI-Player: 1`. Responses are not cached;
-refresh tokens stay encrypted on the server. Browser tokens are kept in memory,
-not URLs or browser storage. `POST /spotify/transfer` targets one device and defaults
-to `play: false`. Provider/DRM/consent failures are displayed in the Music panel.
-
-Reference: [Spotify Web Playback SDK](https://developer.spotify.com/documentation/web-playback-sdk/reference).
-Checks: `python -B -m unittest -v test_spotify_browser` (fake tokens, no real audio).
-
-The dashboard transport uses one play/pause button synchronized with playback, flanked by previous/next track buttons. POST /spotify/previous and POST /spotify/next accept an optional device_id, use the existing playback permission, and return a request acknowledgement. No additional authorization scopes are needed.
-
-
 ## Song search and playback (19 October 2026)
 
 - GET /spotify/search?title=Kiss%20of%20Life&artist=Sade returns playable track candidates.
@@ -307,52 +280,6 @@ YouTube sign-in. PAPI does not read, import, sync, or store its videos or creden
 The built-in Watch Later list cannot be retrieved through the official YouTube API.
 See [YouTube's playlist restriction](https://developers.google.com/youtube/v3/docs/playlists/list).
 
-
-## Dashboard-first assistant music (19 October 2026)
-
-GET/POST/DELETE /spotify/dashboard-player track the current browser SDK device
-with an eight-second heartbeat expiry; all endpoints retain the existing local
-request/origin checks. Registrations contain device ID and autoplay status only,
-not tokens. A stale tab cannot stay registered indefinitely. Disconnect removes
-only the matching device, so an old tab cannot unregister a different new one.
-
-The /assistant/command request now accepts an optional device_id. Voice-assistant
-play/resume/playlist/song requests use the dashboard registration so desktop or
-phone playback is not selected by accident. Other callers retain the existing
-active-device behavior when they omit device_id.
-
-A dashboard URL with ?voice_music=1 automatically connects the Spotify SDK when
-streaming permissions exist. Ordinary dashboard visits still require Enable
-browser player and do not start music automatically. Autoplay restrictions show
-an actionable Play here message; successful SDK playback clears that state.
-The assistant opens a dashboard only when there is no fresh ready registration.
-
-Verification: 23 API regression tests and simulated browser lifecycle checks
-passed. A live request selected PAPI · This browser and Spotify reported playback;
-a browser autoplay restriction was also reported, so a real Play here click may
-still be necessary. Refresh older dashboard tabs to load the new client script.
-Reference: https://developer.spotify.com/documentation/web-playback-sdk/reference
-
-## Hands-free dashboard music
-
-The assistant reuses the live browser player and transfers to its exact device
-with play=false before requesting the song or playlist. It does not resume an
-unrelated track first or retry the song command. A failed transfer stops the request.
-Dashboard registrations now allow a 90-second heartbeat gap so background timer
-throttling does not immediately cause a second tab to open. Disconnection still
-removes the registration and abandoned registrations expire.
-
-Enabling the browser player remembers that preference locally (no tokens stored)
-and reconnects it on later dashboard visits. Disconnect browser clears the preference.
-Normal clicks in a ready dashboard also activate browser audio. Keep the tab open.
-
-Browser autoplay restrictions still apply. For Firefox, allow Autoplay → Allow
-Audio and Video for http://127.0.0.1:8000 once if playback is blocked. This is a
-site-specific browser preference, not something the dashboard can override.
-https://support.mozilla.org/en-US/kb/block-autoplay
-Restart an already-open voice assistant and refresh the dashboard after updating.
-
-Music commands now default to the registered live dashboard device when no device_id is supplied. After a successful song, playlist, or resume request, the API automatically transfers to that dashboard with play=true (the Play here action). Pause and read-only commands never trigger this transfer, and explicitly selected other devices remain respected. A stale autoplay-block report no longer prevents one explicit voice request; new browser blocks are still reported. Live resume verified Spotify playing on the registered dashboard without a Play here click.
 
 ## Task and meeting reminders
 
@@ -400,3 +327,27 @@ folder targeting Windows PowerShell with `-NoProfile -WindowStyle Hidden -File`
 followed by the quoted absolute path to `start-papi.ps1`, then `-NoBrowser`.
 Startup and desktop shortcuts belong to your Windows account and are not bundled
 in the repository. The Python virtual environment must already be installed.
+
+## Spotify desktop playback
+
+Voice requests such as "Open Spotify and play Like a Tattoo by Sade" open the
+installed Spotify desktop app through its spotify: protocol, wait up to 30 seconds
+for this computer to appear in Spotify Connect, and target that device. Resolved song/playlist URIs are then opened through the native Spotify handler so a newly launched client initializes playback without a browser. Only validated Spotify track/playlist URIs are accepted. Sign in to
+the desktop app first. The API starts automatically if needed. Songs and playlists
+still use the saved OAuth grant; no Spotify credentials are sent to the chat model.
+
+The expected device name defaults to the Windows computer name. For a renamed
+Spotify computer, set SPOTIFY_DESKTOP_DEVICE_NAME in the assistant's environment
+(and PAPI's environment to use the same dashboard default). Other computers and
+browser SDK devices are never guessed as a fallback. Cancellation prevents playback.
+
+The dashboard shows playlists, current playback, play/pause and previous/next
+controls. Its device selector prefers this computer and still permits explicit
+selection of another device. Keep Spotify running to control it; the dashboard can
+be closed while the assistant plays music. Windows desktop launch requires Spotify
+installed; playback control remains subject to Spotify Premium and device restrictions.
+
+The browser SDK, player registration, browser-token endpoint, streaming scopes,
+and Play here/Enable browser player controls have been removed. Existing encrypted
+Spotify credentials are preserved; newly requested grants do not include streaming
+or email access. Restart the assistant and refresh older dashboard tabs after updating.

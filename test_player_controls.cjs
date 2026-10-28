@@ -12,7 +12,7 @@ function $(key) {
 }
 const calls=[], errors=[];
 const context = {$,state:{spotify:{connected:true,playback_ready:true},current:{is_playing:false},musicCommandLoading:false},
-  timeLabel:()=>'', window:{papiBrowserPlayer:{preparePlayback:async()=>calls.push('activate')}},
+  timeLabel:()=>'', window:{},
   post:async(path,body)=>calls.push({path,body}),toast:text=>errors.push(text),loadMusic:async()=>{},setTimeout:fn=>fn(),
   deviceBody:()=>({device_id:$('#device-select').value})};
 vm.createContext(context);
@@ -23,8 +23,8 @@ vm.runInContext(source.slice(source.indexOf('function setMusicControls()'),sourc
   assert.equal($('#play-pause').attrs['aria-label'],'Play Spotify');
   assert.equal($('toggle-icon').attrs.href,'#i-play');
   await $('#play-pause').listeners.click();
-  assert.equal(calls[1].path,'/spotify/play');
-  assert.equal(calls[1].body.device_id,'test-device');
+  assert.equal(calls[0].path,'/spotify/play');
+  assert.equal(calls[0].body.device_id,'test-device');
   assert.equal($('#play-pause').attrs['aria-label'],'Pause Spotify');
   assert.equal($('toggle-icon').attrs.href,'#i-pause');
   await $('#play-pause').listeners.click();

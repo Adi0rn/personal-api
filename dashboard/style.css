@@ -47,7 +47,6 @@ dialog input,dialog select,dialog textarea{background:#0c0813;border-color:#422d
 
 @media(min-width:1101px){.music-panel{grid-row:2 / span 2}}
 
-.browser-player{border:1px solid #352445;border-radius:12px;padding:14px;margin:15px 0}.browser-actions{display:flex;flex-wrap:wrap;gap:12px}.browser-player p{font-size:12px;line-height:1.7;color:#bca5d0;margin:10px 0 0}.browser-player a{display:inline-block;margin-top:10px}
 
 .player-controls{flex-wrap:wrap}.player-controls #player-status{flex:1;min-width:100px}
 

@@ -20,8 +20,7 @@ import spotify_store
 ENV_FILE = Path(__file__).resolve().parent / ".env"
 REDIRECT_URI = "http://127.0.0.1:8000/spotify/callback"
 PLAYBACK_SCOPES = {"user-read-currently-playing", "user-read-playback-state", "user-modify-playback-state"}
-BROWSER_SCOPES = {"streaming", "user-read-email", "user-read-private"}
-SCOPES = "playlist-read-private " + " ".join(sorted(PLAYBACK_SCOPES | BROWSER_SCOPES))
+SCOPES = "user-read-private playlist-read-private " + " ".join(sorted(PLAYBACK_SCOPES))
 COOKIE = "spotify_oauth_state"
 LOCK = RLock()
 PENDING = {}
@@ -202,24 +201,7 @@ def spotify_status():
     return {"configured": bool(configured), "connected": bool(tokens and configured and tokens.get("client_id") == configured),
             "connect_url": "/connect/spotify", "redirect_uri": REDIRECT_URI,
             "playback_ready": bool(tokens and configured and tokens.get("client_id") == configured and PLAYBACK_SCOPES.issubset(set(tokens.get("scope", "").split()))),
-            "browser_playback_ready": bool(tokens and configured and tokens.get("client_id") == configured and (PLAYBACK_SCOPES | BROWSER_SCOPES).issubset(set(tokens.get("scope", "").split()))),
-            "missing_browser_permissions": sorted((PLAYBACK_SCOPES | BROWSER_SCOPES) - set((tokens or {}).get("scope", "").split())),
             "missing_playback_permissions": sorted(PLAYBACK_SCOPES - set((tokens or {}).get("scope", "").split()))}
-
-
-@router.post("/spotify/browser-token", include_in_schema=False)
-def browser_token(request: Request, response: Response):
-    # A custom header requires preflight for cross-origin browser requests.
-    if request.headers.get("x-papi-player") != "1" or request.headers.get("sec-fetch-site") == "cross-site":
-        raise HTTPException(403, "Enable the player from the PAPI dashboard.")
-    with LOCK:
-        token = access_token()
-        tokens = read_tokens() or {}
-        if not (BROWSER_SCOPES | PLAYBACK_SCOPES).issubset(set(tokens.get("scope", "").split())):
-            raise HTTPException(403, "Reconnect Spotify to approve browser streaming permissions.")
-        expires_in = max(0, int(tokens.get("expires_at", 0) - time.time()))
-    response.headers.update({"Cache-Control": "no-store", "Pragma": "no-cache", "Referrer-Policy": "no-referrer"})
-    return {"access_token": token, "expires_in": expires_in, "token_type": "Bearer"}
 
 
 @router.get("/spotify/profile")

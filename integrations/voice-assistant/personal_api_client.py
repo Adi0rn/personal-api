@@ -28,14 +28,30 @@ PATTERN = re.compile(r"(?:(?:add|create)(?: a)? task\s+.+|(?:complete|finish|mar
 SONG = re.compile(r"play\s+(?:(?:the\s+)?(?:song|track)\s+)?(.+?)\s+by\s+(.+)", re.IGNORECASE)
 
 
+def spotify_candidate(text):
+    # Transcription can quote the verb with the title: "Play Like a Tattoo" by Sade.
+    value = text.strip().translate(str.maketrans({'“': '"', '”': '"'}))
+    value = re.sub(r'^"(?=(?:please\s+)?(?:play|open\s+spotify)\b)', '', value, flags=re.IGNORECASE)
+    value = re.sub(r'^please\s+(?=(?:play|open\s+spotify)\b)', '', value, flags=re.IGNORECASE)
+    value = re.sub(r'^open\s+spotify\s+and\s+', '', value, flags=re.IGNORECASE)
+    value = value.rstrip('.!?').strip().rstrip('"').strip()
+    value = re.sub(r'\s+on\s+spotify[.!?]*$', '', value, flags=re.IGNORECASE)
+    return value.rstrip('.!?').strip()
+
+
+def song_field(value):
+    value = value.strip().strip('"').strip()
+    if len(value) > 1 and (value[0], value[-1]) in {("'", "'"), ('‘', '’')}:
+        value = value[1:-1].strip()
+    return value
+
+
 def spotify_request(text):
     """Normalize explicit Spotify phrases before generic app opening can claim them."""
-    candidate = re.sub(r"^(?:please\s+)?open\s+spotify\s+and\s+", "", text, flags=re.IGNORECASE)
-    candidate = re.sub(r"\s+on\s+spotify[.!?]*$", "", candidate, flags=re.IGNORECASE)
-    candidate = candidate.rstrip(".!?").strip()
+    candidate = spotify_candidate(text)
     song = SONG.fullmatch(candidate)
     if song and not re.match(r"play(?: my)? playlist\s", candidate, re.IGNORECASE):
-        return "play " + song.group(1).strip() + " by " + song.group(2).strip(), True
+        return "play " + song_field(song.group(1)) + " by " + song_field(song.group(2)), True
     normalized = candidate.casefold().replace("’", "'")
     music_controls = {"pause music", "pause my music", "pause spotify", "resume music", "resume my music", "resume spotify", "play music", "play my music"}
     if candidate != text and (normalized in music_controls or re.fullmatch(r"play(?: my)? playlist\s+.+", candidate, re.IGNORECASE)):
@@ -57,19 +73,6 @@ def base_url():
     return value
 
 
-def _dashboard_state(session, base):
-    response = session.get(base + "/spotify/dashboard-player", timeout=(2, 4), allow_redirects=False)
-    if response.status_code != 200:
-        raise PersonalAPIError("Update or restart your Personal API to enable dashboard playback.")
-    try:
-        body = response.json()
-    except ValueError:
-        raise PersonalAPIError("Your dashboard player returned an unexpected response.") from None
-    if not isinstance(body, dict) or not isinstance(body.get("ready"), bool):
-        raise PersonalAPIError("Your dashboard player returned an unexpected response.")
-    return body
-
-
 def _start_personal_api():
     from pathlib import Path
     import subprocess
@@ -84,51 +87,62 @@ def _start_personal_api():
         raise PersonalAPIError("Could not start your Personal API. Start it manually, then try again.") from None
 
 
-def dashboard_device(session, base, cancel_event=None):
+def _launch_spotify(uri="spotify:"):
+    if uri != "spotify:" and (not isinstance(uri, str) or not re.fullmatch(r"spotify:(?:track|playlist):[A-Za-z0-9]{22}", uri)):
+        raise PersonalAPIError("PAPI returned an invalid Spotify link.")
+    if os.name != "nt":
+        raise PersonalAPIError("Automatic Spotify desktop launch requires Windows.")
+    try:
+        os.startfile(uri)
+    except OSError:
+        raise PersonalAPIError("Could not open the Spotify desktop app. Install it and sign in, then try again.") from None
+
+
+def _desktop_devices(session, base):
+    response = session.get(base + "/spotify/devices", timeout=(2, 20), allow_redirects=False)
+    try:
+        body = response.json()
+    except ValueError:
+        raise PersonalAPIError("Spotify returned an unexpected device response.") from None
+    if response.status_code != 200:
+        detail = body.get("detail") if isinstance(body, dict) else None
+        raise PersonalAPIError(detail if isinstance(detail, str) else "Could not find your Spotify desktop player.")
+    if not isinstance(body, dict) or not isinstance(body.get("devices"), list):
+        raise PersonalAPIError("Spotify returned an unexpected device response.")
+    return body["devices"]
+
+
+def desktop_device(session, base, cancel_event=None):
     import requests
+    import socket
     def cancelled():
         if cancel_event is not None and cancel_event.is_set():
             raise PersonalAPIError("Music request cancelled.")
     cancelled()
-    try:
-        state = _dashboard_state(session, base)
-    except requests.ConnectionError:
-        _start_personal_api()
-        deadline = time.monotonic() + 12
-        while True:
-            cancelled()
-            try:
-                state = _dashboard_state(session, base)
-                break
-            except requests.ConnectionError:
-                if time.monotonic() >= deadline:
-                    raise PersonalAPIError("Your Personal API did not start. Check its server logs.") from None
-                time.sleep(0.4)
-    if not state["ready"]:
+    _launch_spotify()
+    wanted = (os.getenv("SPOTIFY_DESKTOP_DEVICE_NAME") or os.getenv("COMPUTERNAME") or socket.gethostname()).strip().casefold()
+    deadline = time.monotonic() + 30
+    started_api = False
+    while True:
         cancelled()
         try:
-            opened = webbrowser.open(base + "/dashboard?voice_music=1#music", new=2)
-        except (OSError, webbrowser.Error):
-            opened = False
-        if not opened:
-            raise PersonalAPIError("Could not open your dashboard. Open it in your browser and enable its player.")
-        status = session.get(base + "/spotify/status", timeout=(2, 4), allow_redirects=False)
-        if status.status_code == 200 and not status.json().get("browser_playback_ready"):
-            raise PersonalAPIError("I opened your dashboard. Reconnect Spotify there to approve browser streaming access. Spotify Premium is required.")
-        deadline = time.monotonic() + 35
-        while not state["ready"]:
-            cancelled()
-            if time.monotonic() >= deadline:
-                raise PersonalAPIError("Your dashboard is open. Click Enable browser player or Play here, then ask for music again.")
-            time.sleep(0.4)
-            state = _dashboard_state(session, base)
-    cancelled()
-    # A previous autoplay report may be stale after permission changed.
-    # Send this explicit request once; report a fresh block after the request.
-    device_id = state.get("device_id")
-    if not isinstance(device_id, str) or not device_id.strip() or len(device_id) > 256:
-        raise PersonalAPIError("Your dashboard player has no valid device. Enable it again in the dashboard.")
-    return device_id
+            devices = _desktop_devices(session, base)
+        except requests.ConnectionError:
+            if not started_api:
+                _start_personal_api(); started_api = True
+            devices = []
+        matches = [d for d in devices if isinstance(d, dict)
+                   and str(d.get("name", "")).strip().casefold() == wanted
+                   and str(d.get("type", "")).casefold() == "computer"
+                   and not d.get("is_restricted") and isinstance(d.get("id"), str)
+                   and 0 < len(d["id"].strip()) <= 256]
+        if len(matches) == 1:
+            return matches[0]["id"]
+        if len(matches) > 1:
+            raise PersonalAPIError("More than one Spotify computer has that name. Give this computer a unique Spotify device name.")
+        if time.monotonic() >= deadline:
+            raise PersonalAPIError("Spotify opened but this computer is not available yet. Sign in to the desktop app. If its device name differs from the Windows computer name, set SPOTIFY_DESKTOP_DEVICE_NAME in the assistant's environment.")
+        time.sleep(0.5)
 
 
 def handle_api_command(text, cancel_event=None):
@@ -147,31 +161,18 @@ def handle_api_command(text, cancel_event=None):
             raise PersonalAPIError("Could not open the dashboard. Open " + base + "/dashboard in your browser.")
         return "Opened your Personal API dashboard."
     import requests
-    autoplay_blocked = False
     try:
         with requests.Session() as session:
             session.trust_env = False
             payload = {"text": original}
             music = song_request or normalized in {"resume music", "resume my music", "resume spotify", "play music", "play my music"} or bool(re.fullmatch(r"play(?: my)? playlist\s+.+", original, re.IGNORECASE))
             if music:
-                payload["device_id"] = dashboard_device(session, base, cancel_event)
+                payload["device_id"] = desktop_device(session, base, cancel_event)
                 if cancel_event is not None and cancel_event.is_set():
                     raise PersonalAPIError("Music request cancelled.")
-                # Activate this SDK device before the song/playlist command; do not
-                # resume an old track or repeat the requested command as a retry.
-                transfer = session.post(base + "/spotify/transfer",
-                    json={"device_id": payload["device_id"], "play": False},
-                    timeout=(2, 20), allow_redirects=False)
-                if transfer.status_code not in (200, 202, 204):
-                    raise PersonalAPIError("Could not select your dashboard player. Enable it again, then retry the command.")
             if cancel_event is not None and cancel_event.is_set():
                 raise PersonalAPIError("Request cancelled.")
             response = session.post(base + "/assistant/command", json=payload, timeout=(2, 75) if normalized in {"give me my daily briefing", "daily briefing", "show my briefing", "show my daily briefing", "give me my briefing", "what's my day looking like", "what is my day looking like"} else (2, 40), allow_redirects=False)
-            if music and response.status_code == 200:
-                try:
-                    autoplay_blocked = bool(_dashboard_state(session, base).get("autoplay_blocked"))
-                except (requests.RequestException, PersonalAPIError):
-                    pass  # Never repeat playback just to check its browser status.
     except requests.RequestException:
         raise PersonalAPIError("Cannot reach your Personal API. Start its server, then try again.") from None
     try:
@@ -190,10 +191,9 @@ def handle_api_command(text, cancel_event=None):
     reply = body.get("reply")
     if not isinstance(reply, str) or not reply:
         raise PersonalAPIError("Your Personal API returned no command result.")
-    if music:
-        reply = reply.replace(" on Spotify.", " in your dashboard.")
-        if "dashboard" not in reply.casefold():
-            reply += " Playback targets your dashboard."
-        if autoplay_blocked:
-            reply += " Your browser blocked audio; click Play here once or allow Autoplay for this PAPI site to avoid repeated clicks."
+    if music and body.get("action") in {"song_requested", "playlist_requested"}:
+        uri = body.get("track_uri") or body.get("playlist_uri")
+        if uri:
+            # A native URI also initializes a newly opened app's playback context.
+            _launch_spotify(uri)
     return reply

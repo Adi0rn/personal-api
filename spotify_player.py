@@ -1,6 +1,8 @@
 """Read Spotify playback and send explicit playback commands."""
 
 import re
+import os
+import socket
 from typing import Annotated
 from urllib.parse import urlsplit
 
@@ -120,6 +122,7 @@ def currently_playing():
 def devices():
     data = player_request("GET", "devices", "user-read-playback-state") or {}
     return {"devices": [{"id": device.get("id"), "name": device.get("name"), "type": device.get("type"),
+                         "is_local": str(device.get("name", "")).casefold() == (os.getenv("SPOTIFY_DESKTOP_DEVICE_NAME") or os.getenv("COMPUTERNAME") or socket.gethostname()).casefold(),
                          "is_active": bool(device.get("is_active")), "is_restricted": bool(device.get("is_restricted"))}
                         for device in data.get("devices", [])]}
 

@@ -11,7 +11,6 @@ import tasks
 import spotify_connection as spotify
 import spotify_player as player
 import spotify_songs
-import dashboard_player
 import connections
 import briefing
 
@@ -123,7 +122,7 @@ def handle_command(text, device_id=None):
         artists = ", ".join(item.get("artists") or [])
         return result(("Playing " if current["is_playing"] else "Paused on ") + (item.get("name") or "an untitled item") + (" by " + artists if artists else "") + ".")
     if normalized in {"pause music", "pause my music", "pause spotify"}:
-        player.pause()
+        player.pause(player.DeviceRequest(device_id=device_id)) if device_id else player.pause()
         return result("Sent the pause command to Spotify.", "music_paused")
     if normalized in {"resume music", "resume my music", "resume spotify", "play music", "play my music"}:
         player.play(player.PlayRequest(device_id=device_id)) if device_id else player.play()
@@ -135,7 +134,9 @@ def handle_command(text, device_id=None):
         if device_id:
             target.device_id = device_id
         player.play(target)
-        return result("Sent the playlist playback command to Spotify.", "playlist_requested")
+        reply = result("Sent the playlist playback command to Spotify.", "playlist_requested")
+        reply["playlist_uri"] = target.playlist
+        return reply
     return {"handled": False, "reply": "That command is not supported yet. Try show my tasks, pause my music, or help.", "action": None}
 
 
@@ -143,15 +144,6 @@ def handle_command(text, device_id=None):
 def command(body: Command):
     """Execute only recognized explicit commands; no model or shell executes actions."""
     try:
-        dashboard = dashboard_player.status()
-        target = body.device_id or (dashboard["device_id"] if dashboard["ready"] else None)
-        reply = handle_command(body.text, device_id=target)
-        if (reply.get("action") in {"song_requested", "playlist_requested", "music_resumed"}
-                and dashboard["ready"] and target == dashboard["device_id"]):
-            # Finish the same transfer as Play here, automatically, after the
-            # requested track/context is selected. Never repeat the song command.
-            player.transfer(player.TransferRequest(device_id=target, play=True))
-            reply["dashboard_playback"] = True
-        return reply
+        return handle_command(body.text, device_id=body.device_id)
     except ValidationError:
         raise HTTPException(422, "Check the command details. Task titles must be between 1 and 200 characters.") from None
