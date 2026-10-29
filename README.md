@@ -158,7 +158,7 @@ Supported examples:
 - What song is playing?
 - Pause my music / Resume my music
 - Play playlist Heart and soul (exact playlist name, ID, URI, or link)
-- Open dashboard (opens the page from the voice assistant)
+- Open dashboard (opens the dedicated PAPI window; never falls back to a browser tab)
 
 The shared API route is `POST /assistant/command` with `{"text":"show my tasks"}`. Only recognized explicit commands execute actions. Unknown commands return handled=false. In the companion assistant, unrelated questions continue to Gemini; failures in recognized API commands are reported and do not fall back to the model. Due dates and priorities can be edited in the dashboard; the basic voice add-task command treats its remaining text as the task title.
 
@@ -318,8 +318,11 @@ Validation: python -B -m unittest -v test_reminders.
 
 ## Windows launcher and sign-in startup
 
-Run `start-papi.ps1` from the cloned project to start the local server and open the
-dashboard. Use `-NoBrowser` to start only the server. The launcher reuses a healthy
+Run `start-papi.ps1` from the cloned project to start the local server and open PAPI
+in its own app-style window (Microsoft Edge, or Chrome as a fallback). The existing
+desktop shortcut uses this mode automatically. Use `-Browser` to open a regular
+browser tab, or `-NoBrowser` to start only the server. Closing the PAPI window leaves
+the server running for reminders, tracking, and the voice assistant. The launcher reuses a healthy
 server and keeps Uvicorn bound to loopback. Its logs remain ignored by Git.
 
 For automatic startup at Windows sign-in, place a shortcut in your user's Startup
@@ -351,3 +354,16 @@ The browser SDK, player registration, browser-token endpoint, streaming scopes,
 and Play here/Enable browser player controls have been removed. Existing encrypted
 Spotify credentials are preserved; newly requested grants do not include streaming
 or email access. Restart the assistant and refresh older dashboard tabs after updating.
+
+## Saved links
+
+Open Saved links in the dashboard to save HTTP/HTTPS URLs with an optional title
+and up to 10 tags. Search titles, URLs and tags, filter read/unread, edit titles/tags,
+mark read/unread, or delete a link. Empty titles default to the website hostname.
+Bookmarks persist in the existing ignored data/tasks.db. Saving never requests the
+external page; links open in a separate tab only when clicked.
+
+API: GET /links?q=...&tag=...&is_read=false; POST /links with url/title/tags;
+PATCH /links/{id} with title, tags or is_read; DELETE /links/{id}. Duplicate URLs
+return 409. Only HTTP/HTTPS URLs without embedded credentials are accepted.
+Checks: python -m unittest test_saved_links -v (temporary database).

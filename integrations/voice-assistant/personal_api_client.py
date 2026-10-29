@@ -4,7 +4,7 @@ import os
 import re
 import time
 from urllib.parse import urlsplit
-import webbrowser
+import subprocess
 
 
 class PersonalAPIError(Exception):
@@ -71,6 +71,32 @@ def base_url():
     if not valid:
         raise PersonalAPIError("PERSONAL_API_URL must be a local address such as http://127.0.0.1:8000.")
     return value
+
+
+def _dashboard_launcher():
+    from pathlib import Path
+    here = Path(__file__).resolve().parent
+    for folder in (here, *here.parents):
+        for script in (folder / "start-papi.ps1", folder / "Personal API" / "start-papi.ps1"):
+            if script.is_file():
+                return script
+    raise PersonalAPIError("Could not find PAPI's window launcher. Restore start-papi.ps1 in the Personal API folder.")
+
+
+def _open_dashboard_window():
+    if os.name != "nt":
+        raise PersonalAPIError("PAPI's dedicated window requires Windows.")
+    script = _dashboard_launcher()
+    try:
+        subprocess.run(
+            ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-WindowStyle", "Hidden",
+             "-File", str(script), "-AppOnly"],
+            cwd=script.parent, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL, creationflags=subprocess.CREATE_NO_WINDOW,
+            check=True, timeout=45,
+        )
+    except (OSError, subprocess.SubprocessError):
+        raise PersonalAPIError("Could not open the PAPI window. Check that Edge or Chrome is installed and try Start PAPI from your desktop.") from None
 
 
 def _start_personal_api():
@@ -153,13 +179,8 @@ def handle_api_command(text, cancel_event=None):
         return None
     base = base_url()
     if normalized in OPEN:
-        try:
-            opened = webbrowser.open(base + "/dashboard", new=2)
-        except (OSError, webbrowser.Error):
-            opened = False
-        if not opened:
-            raise PersonalAPIError("Could not open the dashboard. Open " + base + "/dashboard in your browser.")
-        return "Opened your Personal API dashboard."
+        _open_dashboard_window()
+        return "Opened your PAPI window."
     import requests
     try:
         with requests.Session() as session:
