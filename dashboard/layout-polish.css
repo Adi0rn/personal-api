@@ -1,0 +1,64 @@
+/* Shared spacing rhythm across the existing steel-blue bento layout. */
+:root {--space-card:24px;--space-section:24px;--space-field:12px}
+body .page {gap:var(--space-section)}
+body .panel,body.single-view .panel {padding:var(--space-card)}
+body .panel-heading,body .briefing-panel .panel-heading,body.single-view .panel-heading {margin:0 0 var(--space-section);gap:16px;align-items:center}
+body .panel-heading h2 {margin:0}
+body .project-grid,body .connections-grid,body .briefing-grid {gap:var(--space-section)}
+body :is(.project-card,.connection-card) {padding:20px}
+body .saved-link-form,body .saved-link-filters,body .reminder-settings {gap:16px}
+body .saved-link-form label,body .task-create-details label {display:grid;gap:8px}
+body .task-create-details {gap:16px;margin-top:16px;align-items:end}
+body .task-toolbar {padding-bottom:16px}
+body .task-row {padding:16px 0}
+body :is(.task-create-details input,.task-create-details select,.task-toolbar select,.saved-link-form input,.saved-link-filters input,.saved-link-filters select,.reminder-settings select) {min-height:40px}
+body .button,body .icon-button {min-height:40px}
+body .icon-button {width:40px}
+body .single-view .panel {margin-bottom:24px}
+/* The overview keeps a compact, vertical player. */
+.music-stage,.music-info {min-width:0}
+.music-info {display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
+body .music-info .now-playing {width:100%}
+body .music-info .now-playing h3 {margin:12px 0 8px;overflow-wrap:anywhere}
+body .music-info .now-playing p {margin:0;line-height:1.6}
+body .music-info .player-controls {margin:24px 0 0;gap:16px;flex-wrap:wrap}
+body .music-info .connect-link {margin-top:16px}
+body .music-info .inline-error:empty {display:none}
+body .music-info .inline-error:not(:empty) {margin:16px 0 0}
+body .music-panel .playlist-controls {margin-top:24px;padding-top:24px;display:grid;gap:16px}
+.music-field {display:grid;gap:8px;min-width:0;align-content:start}
+body .music-field select {margin:0;width:100%;min-width:0;min-height:44px;padding:11px 12px;font-size:12px}
+body .music-field label {margin:0;line-height:1.4}
+body .music-field .playlist-row {display:flex;gap:12px;min-width:0}
+body .music-field .playlist-row select {flex:1;width:0}
+body .music-field .icon-button {width:44px;height:44px;flex:0 0 44px}
+body .music-info .player-button.secondary {width:44px;height:44px}
+body .music-info .player-button:not(.secondary) {width:56px;height:56px}
+body .music-info #player-status {font-size:11px;flex:1;min-width:60px}
+/* Wide Music view: artwork left, playback right, playlist fields underneath. */
+body.single-view .music-panel {max-width:1040px;width:100%;padding:32px}
+body.single-view .music-stage {display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:center;gap:40px}
+body.single-view .music-panel .record-scene,
+body.single-view .music-panel .record-scene.has-artwork {width:100%;height:auto;min-height:0;aspect-ratio:1;margin:0;border-radius:14px}
+body.single-view .music-panel .record {width:65%;height:auto;aspect-ratio:1}
+body.single-view .music-panel .record-label {width:34%;height:34%}
+body.single-view .music-info .now-playing h3 {font-size:clamp(28px,3vw,40px);line-height:1.15;letter-spacing:-1px}
+body.single-view .music-info .now-playing p {font-size:14px}
+body.single-view .music-info .eyebrow {font-size:10px}
+body.single-view .music-panel .playlist-controls {grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);column-gap:24px;margin-top:32px;padding-top:24px}
+body.single-view .music-panel #more-playlists {grid-column:1/-1;justify-self:end}
+@media(max-width:950px) {
+  body.single-view .music-panel {padding:24px}
+  body.single-view .music-stage {gap:24px;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+}
+@media(max-width:700px) {
+  :root {--space-card:20px;--space-section:20px}
+  body .page {gap:var(--space-section)}
+  body.single-view .music-panel {padding:20px}
+  body.single-view .music-stage {grid-template-columns:1fr;gap:24px}
+  body.single-view .music-info .now-playing h3 {font-size:30px}
+  body.single-view .music-panel .playlist-controls {grid-template-columns:1fr;margin-top:24px;gap:20px}
+  body .music-info .player-controls {margin-top:20px}
+  body .saved-link-form,body .saved-link-filters,body .reminder-settings {gap:16px}
+  body .task-create-details {flex-wrap:wrap}
+}

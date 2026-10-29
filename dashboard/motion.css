@@ -1,0 +1,28 @@
+/* Registered colours let gradients blend instead of jumping between albums. */
+@property --album-bg {syntax:'<color>';inherits:true;initial-value:#10161c}
+@property --album-raised {syntax:'<color>';inherits:true;initial-value:#1f2c38}
+@property --album-accent {syntax:'<color>';inherits:true;initial-value:#d6b875}
+@property --album-hover {syntax:'<color>';inherits:true;initial-value:#e6cd96}
+@property --album-muted {syntax:'<color>';inherits:true;initial-value:#b7c6d3}
+@property --album-line {syntax:'<color>';inherits:true;initial-value:#33475a}
+@property --album-text {syntax:'<color>';inherits:true;initial-value:#e7edf2}
+@property --album-ink {syntax:'<color>';inherits:true;initial-value:#10161c}
+body,.music-panel {
+  transition:--album-bg 650ms ease,--album-raised 650ms ease,
+    --album-accent 650ms ease,--album-hover 650ms ease,
+    --album-muted 650ms ease,--album-line 650ms ease,
+    --album-text 650ms ease,--album-ink 650ms ease,
+    background-color 450ms ease,color 300ms ease,border-color 450ms ease;
+}
+body :is(.sidebar,.command-card,.nav-item,.icon-button,.send-button,.player-button,select,.brand-logo) {
+  transition:background-color 300ms ease,color 250ms ease,border-color 300ms ease,box-shadow 180ms ease;
+}
+body .panel:not([hidden]) {animation:papi-panel-enter 200ms cubic-bezier(.2,.7,.3,1) both}
+@keyframes papi-panel-enter {from{opacity:.3;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+/* No delays on controls; motion is decorative and never blocks interaction. */
+@media(prefers-reduced-motion:reduce) {
+  body,body .music-panel,body .panel:not([hidden]),
+  body :is(.sidebar,.command-card,.nav-item,.icon-button,.send-button,.player-button,select,.brand-logo) {
+    animation:none;transition:none;
+  }
+}

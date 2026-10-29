@@ -13,7 +13,7 @@ class DashboardCommandTests(unittest.TestCase):
 
     def test_dashboard_and_local_assets(self):
         with test_server() as base, httpx.Client(base_url=base, trust_env=False) as client:
-            for path, content in (("/dashboard", "Your next moves"), ("/dashboard/assets/app.js", "/assistant/command"), ("/dashboard/assets/style.css", ".sidebar")):
+            for path, content in (("/dashboard", 'id="task-list"'), ("/dashboard/assets/app.js", "/assistant/command"), ("/dashboard/assets/style.css", ".sidebar")):
                 response = client.get(path)
                 self.assertEqual(response.status_code, 200)
                 self.assertIn(content, response.text)
