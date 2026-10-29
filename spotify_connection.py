@@ -60,10 +60,32 @@ def write_tokens(tokens):
         raise HTTPException(500, "Cannot save Spotify credentials on this computer.") from None
 
 
+_HTTP_CLIENT = None
+_HTTP_LOCK = RLock()
+
+
+def http_client():
+    """Reuse TLS connections across Spotify commands and reads."""
+    global _HTTP_CLIENT
+    with _HTTP_LOCK:
+        if _HTTP_CLIENT is None or _HTTP_CLIENT.is_closed:
+            _HTTP_CLIENT = httpx.Client(timeout=15, trust_env=False,
+                                        limits=httpx.Limits(max_connections=10, max_keepalive_connections=5,
+                                                            keepalive_expiry=90))
+        return _HTTP_CLIENT
+
+
+def close_http_client():
+    global _HTTP_CLIENT
+    with _HTTP_LOCK:
+        client, _HTTP_CLIENT = _HTTP_CLIENT, None
+    if client is not None:
+        client.close()
+
+
 def spotify_request(method, url, **kwargs):
     try:
-        with httpx.Client(timeout=15, trust_env=False) as client:
-            return client.request(method, url, **kwargs)
+        return http_client().request(method, url, **kwargs)
     except httpx.RequestError:
         raise HTTPException(502, "Cannot reach Spotify. Check your internet connection and try again.") from None
 

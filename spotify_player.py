@@ -104,6 +104,21 @@ def player_request(method, path, scope, *, params=None, payload=None):
     return spotify.check_response(response)
 
 
+def artwork_url(item):
+    """Use Spotify-hosted album or episode art without fetching the image here."""
+    images = ((item.get("album") or {}).get("images") if item.get("type") == "track"
+              else item.get("images") or (item.get("show") or {}).get("images")) or []
+    for image in images:
+        if not isinstance(image, dict) or not isinstance(image.get("url"), str):
+            continue
+        url = urlsplit(image["url"])
+        if (url.scheme == "https" and url.hostname in {
+                "i.scdn.co", "mosaic.scdn.co", "image-cdn-ak.spotifycdn.com", "image-cdn-fa.spotifycdn.com"}
+                and not url.username and not url.password and url.port in {None, 443}):
+            return image["url"]
+    return None
+
+
 @router.get("/currently-playing")
 def currently_playing():
     data = player_request("GET", "currently-playing", "user-read-currently-playing", params={"additional_types": "track,episode"})
@@ -113,6 +128,7 @@ def currently_playing():
     result = None if not item else {
         "id": item.get("id"), "name": item.get("name"), "type": item.get("type"),
         "artists": [artist.get("name") for artist in item.get("artists", [])],
+        "image_url": artwork_url(item),
         "duration_ms": item.get("duration_ms"), "url": (item.get("external_urls") or {}).get("spotify"),
     }
     return {"is_playing": bool(data.get("is_playing")), "item": result, "progress_ms": data.get("progress_ms")}

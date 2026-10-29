@@ -3,6 +3,8 @@ import os
 import screen_time
 import briefing
 import reminders
+import saved_links
+import spotify_connection
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -25,6 +27,7 @@ PROFILE_FILE = BASE_DIR / "data" / "profile.json"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    saved_links.init_db()
     reminders.init_db()
     enable_reminders = os.getenv("PAPI_DISABLE_REMINDERS") != "1"
     if enable_reminders:
@@ -39,6 +42,7 @@ async def lifespan(app: FastAPI):
             reminders.WORKER.stop()
         if track_screen_time:
             screen_time.TRACKER.stop()
+        spotify_connection.close_http_client()
 
 
 app = FastAPI(title="Personal API", version="0.7.0", lifespan=lifespan)
@@ -52,6 +56,7 @@ app.include_router(connections_router)
 app.include_router(screen_time.router)
 app.include_router(briefing.router)
 app.include_router(reminders.router)
+app.include_router(saved_links.router)
 
 
 @app.get("/")
